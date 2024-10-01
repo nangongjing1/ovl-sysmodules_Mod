@@ -44,7 +44,7 @@ TARGET		:=	ovlSysmodules
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
-INCLUDES	:=	libs/libultra/include libs/libtesla/include include
+INCLUDES	:=	libs/libultrahand/libultra/include libs/libultrahand/libtesla/include include
 
 #ifeq ($(RELEASE),)
 #	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --dirty --always)
