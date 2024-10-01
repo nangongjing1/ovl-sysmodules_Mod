@@ -8,9 +8,34 @@ class OverlaySysmodules : public tsl::Overlay {
 
     void initServices() override {
         pmshellInitialize();
+
+        fsdevMountSdmc();
+        splInitialize();
+        spsmInitialize();
+        i2cInitialize();
+        ASSERT_FATAL(socketInitializeDefault());
+        ASSERT_FATAL(nifmInitialize(NifmServiceType_User));
+        ASSERT_FATAL(smInitialize());
+
+        if (isFileOrDirectory("sdmc:/config/sysmodules/theme.ini"))
+            THEME_CONFIG_INI_PATH = "sdmc:/config/sysmodules/theme.ini"; // Override theme path (optional)
+        if (isFileOrDirectory("sdmc:/config/sysmodules/wallpaper.rgba"))
+            WALLPAPER_PATH = "sdmc:/config/sysmodules/wallpaper.rgba"; // Overrride wallpaper path (optional)
+
+
+        tsl::initializeThemeVars(); // for ultrahand themes
+        tsl::initializeUltrahandSettings(); // for opaque screenshots and swipe to open
     }
 
     void exitServices() override {
+        socketExit();
+        nifmExit();
+        i2cExit();
+        smExit();
+        spsmExit();
+        splExit();
+        fsdevUnmountAll();
+
         pmshellExit();
     }
 
