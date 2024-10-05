@@ -42,7 +42,7 @@ APP_VERSION	:=	1.3.1+
 
 TARGET		:=	ovlSysmodules
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source libs/libultrahand/libultra/source
 DATA		:=	data
 INCLUDES	:=	libs/libultrahand/libultra/include libs/libultrahand/libtesla/include include
 
@@ -60,7 +60,7 @@ ARCH := -march=armv8-a+simd+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS := -Wall -Os -ffunction-sections -fdata-sections -flto\
 			$(ARCH) $(DEFINES)
 
-CFLAGS += $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -D_FORTIFY_SOURCE=2
+CFLAGS += $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -DVERSION="\"$(APP_VERSION)\"" -D_FORTIFY_SOURCE=2
 
 CXXFLAGS := $(CFLAGS) -std=c++20 -Wno-dangling-else -ffast-math
 
