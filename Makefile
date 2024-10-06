@@ -62,6 +62,11 @@ CFLAGS := -Wall -Os -ffunction-sections -fdata-sections -flto\
 
 CFLAGS += $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -DVERSION="\"$(APP_VERSION)\"" -D_FORTIFY_SOURCE=2
 
+# Enable appearance overriding
+OVERRIDE_APPEARANCE_PATH := /config/sys-modules/
+CFLAGS += -DOVERRIDE_APPEARANCE_PATH="\"$(OVERRIDE_APPEARANCE_PATH)\""
+
+
 CXXFLAGS := $(CFLAGS) -std=c++20 -Wno-dangling-else -ffast-math
 
 ASFLAGS := $(ARCH)
