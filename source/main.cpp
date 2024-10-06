@@ -8,10 +8,6 @@ class OverlaySysmodules : public tsl::Overlay {
 
     void initServices() override {
         pmshellInitialize();
-        if (isFileOrDirectory("sdmc:/config/sysmodules/theme.ini"))
-            THEME_CONFIG_INI_PATH = "sdmc:/config/sysmodules/theme.ini"; // Override theme path (optional)
-        if (isFileOrDirectory("sdmc:/config/sysmodules/wallpaper.rgba"))
-            WALLPAPER_PATH = "sdmc:/config/sysmodules/wallpaper.rgba"; // Overrride wallpaper path (optional)
     }
 
     void exitServices() override {
