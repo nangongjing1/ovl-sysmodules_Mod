@@ -66,6 +66,10 @@ CFLAGS += $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -DVERSION="
 UI_OVERRIDE_PATH := /config/sys-modules/
 CFLAGS += -DUI_OVERRIDE_PATH="\"$(UI_OVERRIDE_PATH)\""
 
+# Disable fstream
+NO_FSTREAM_DIRECTIVE := 1
+CFLAGS += -DNO_FSTREAM_DIRECTIVE=$(NO_FSTREAM_DIRECTIVE)
+
 
 CXXFLAGS := $(CFLAGS) -std=c++20 -Wno-dangling-else -ffast-math
 
