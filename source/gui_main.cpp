@@ -142,7 +142,7 @@ inline void drawMemoryWidget(auto renderer) {
 
         // Calculate free RAM and store in the buffer
         float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f)) - 8.0f;
-        snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, "free");
+        snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, ult::FREE.c_str());
 
         // Update the last update tick
         lastUpdateTick = currentTick;
