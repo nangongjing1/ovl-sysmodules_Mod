@@ -124,8 +124,50 @@ GuiMain::~GuiMain() {
     fsFsClose(&this->m_fs);
 }
 
+// Method to draw available RAM only
+inline void drawMemoryWidget(auto renderer) {
+    static char ramString[24];  // Buffer for RAM string
+    static u64 lastUpdateTick = 0;
+    const u64 ticksPerSecond = armGetSystemTickFreq();
+
+    // Get the current tick count
+    u64 currentTick = armGetSystemTick();
+
+    // Check if this is the first run or at least one second has passed since the last update
+    if (lastUpdateTick == 0 || currentTick - lastUpdateTick >= ticksPerSecond) {
+        // Update RAM information
+        u64 RAM_Used_system_u, RAM_Total_system_u;
+        svcGetSystemInfo(&RAM_Used_system_u, 1, INVALID_HANDLE, 2);
+        svcGetSystemInfo(&RAM_Total_system_u, 0, INVALID_HANDLE, 2);
+
+        // Calculate free RAM and store in the buffer
+        float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f)) - 8.0f;
+        snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, "free");
+
+        // Update the last update tick
+        lastUpdateTick = currentTick;
+    }
+
+    // Draw separator line (if necessary)
+    renderer->drawRect(245, 23, 1, 49, renderer->a(tsl::separatorColor));
+
+    size_t y_offset = 55; // Adjusted y_offset for drawing
+
+    // Draw free RAM string
+    renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - tsl::gfx::calculateStringWidth(ramString, 20, true) - 22, y_offset, 20, tsl::clockColor);
+}
+
 tsl::elm::Element *GuiMain::createUI() {
-    tsl::elm::OverlayFrame *rootFrame = new tsl::elm::OverlayFrame("Sysmodules", VERSION);
+    //tsl::elm::OverlayFrame *rootFrame = new tsl::elm::OverlayFrame("Sysmodules", VERSION);
+
+    auto *rootFrame = new tsl::elm::HeaderOverlayFrame(97);
+    rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+        renderer->drawString("Sysmodules", false, 20, 50+2, 32, renderer->a(tsl::defaultOverlayColor));
+        renderer->drawString(VERSION, false, 20, 50+23, 15, renderer->a(tsl::versionTextColor));
+
+        drawMemoryWidget(renderer);
+    }));
+
 
     if (this->m_sysmoduleListItems.size() == 0) {
         const char *description = this->m_scanned ? "No sysmodules found!" : "Scan failed!";
@@ -138,9 +180,10 @@ tsl::elm::Element *GuiMain::createUI() {
         rootFrame->setContent(warning);
     } else {
         tsl::elm::List *sysmoduleList = new tsl::elm::List();
+
         sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic  |  \uE0E0  Toggle  |  \uE0E3  Toggle auto start", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  These sysmodules can be toggled at any time.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("\uE016  These sysmodules can be toggled at any time.", false, x + 5, y + 20-4, 15, renderer->a(tsl::style::color::ColorDescription));
         }), 30);
         for (const auto &module : this->m_sysmoduleListItems) {
             if (!module.needReboot)
@@ -149,7 +192,7 @@ tsl::elm::Element *GuiMain::createUI() {
 
         sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static  |  \uE0E3  Toggle auto start", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  These sysmodules need a reboot to work.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("\uE016  These sysmodules need a reboot to work.", false, x + 5, y + 20-4, 15, renderer->a(tsl::style::color::ColorDescription));
         }), 30);
         for (const auto &module : this->m_sysmoduleListItems) {
             if (module.needReboot)
