@@ -141,7 +141,7 @@ inline void drawMemoryWidget(auto renderer) {
         svcGetSystemInfo(&RAM_Total_system_u, 0, INVALID_HANDLE, 2);
 
         // Calculate free RAM and store in the buffer
-        float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f)) - 8.0f;
+        float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f));
         snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, ult::FREE.c_str());
 
         // Update the last update tick
