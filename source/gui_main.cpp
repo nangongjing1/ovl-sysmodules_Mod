@@ -127,6 +127,7 @@ GuiMain::~GuiMain() {
 // Method to draw available RAM only
 inline void drawMemoryWidget(auto renderer) {
     static char ramString[24];  // Buffer for RAM string
+    static tsl::Color ramColor = {0,0,0,0};
     static u64 lastUpdateTick = 0;
     const u64 ticksPerSecond = armGetSystemTickFreq();
 
@@ -144,6 +145,13 @@ inline void drawMemoryWidget(auto renderer) {
         float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f));
         snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, ult::FREE.c_str());
 
+        if (freeRamMB >= 9.0f){
+            ramColor = tsl::healthyRamTextColor; // Green: R=0, G=15, B=0
+        } else if (freeRamMB >= 3.0f) {
+            ramColor = tsl::neutralRamTextColor; // Orange-ish: R=15, G=10, B=0 → roughly RGB888: 255, 170, 0
+        } else {
+            ramColor = tsl::badRamTextColor; // Red: R=15, G=0, B=0
+        }
         // Update the last update tick
         lastUpdateTick = currentTick;
     }
@@ -154,7 +162,7 @@ inline void drawMemoryWidget(auto renderer) {
     size_t y_offset = 55; // Adjusted y_offset for drawing
 
     // Draw free RAM string
-    renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - tsl::gfx::calculateStringWidth(ramString, 20, true) - 22, y_offset, 20, tsl::clockColor);
+    renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - tsl::gfx::calculateStringWidth(ramString, 20, true) - 22, y_offset, 20, renderer->a(ramColor));
 }
 
 tsl::elm::Element *GuiMain::createUI() {
