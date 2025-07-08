@@ -130,21 +130,21 @@ inline void drawMemoryWidget(auto renderer) {
     static tsl::Color ramColor = {0,0,0,0};
     static u64 lastUpdateTick = 0;
     const u64 ticksPerSecond = armGetSystemTickFreq();
-
+    
     // Get the current tick count
     u64 currentTick = armGetSystemTick();
-
+    
     // Check if this is the first run or at least one second has passed since the last update
     if (lastUpdateTick == 0 || currentTick - lastUpdateTick >= ticksPerSecond) {
         // Update RAM information
         u64 RAM_Used_system_u, RAM_Total_system_u;
         svcGetSystemInfo(&RAM_Used_system_u, 1, INVALID_HANDLE, 2);
         svcGetSystemInfo(&RAM_Total_system_u, 0, INVALID_HANDLE, 2);
-
+        
         // Calculate free RAM and store in the buffer
         float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f));
         snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, ult::FREE.c_str());
-
+        
         if (freeRamMB >= 9.0f){
             ramColor = tsl::healthyRamTextColor; // Green: R=0, G=15, B=0
         } else if (freeRamMB >= 3.0f) {
@@ -152,17 +152,44 @@ inline void drawMemoryWidget(auto renderer) {
         } else {
             ramColor = tsl::badRamTextColor; // Red: R=15, G=0, B=0
         }
+        
         // Update the last update tick
         lastUpdateTick = currentTick;
     }
-
-    // Draw separator line (if necessary)
-    renderer->drawRect(245, 23, 1, 49, renderer->a(tsl::separatorColor));
-
-    size_t y_offset = 55; // Adjusted y_offset for drawing
-
-    // Draw free RAM string
-    renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - tsl::gfx::calculateStringWidth(ramString, 20, true) - 22, y_offset, 20, renderer->a(ramColor));
+    
+    // Draw separator line
+    renderer->drawRect(239, 15+2-2, 1, 64+2, (tsl::separatorColor));
+    
+    // Draw backdrop if not hidden
+    if (!ult::hideWidgetBackdrop) {
+        renderer->drawUniformRoundedRect(247, 15+2-2, (ult::extendedWidgetBackdrop) ? tsl::cfg::FramebufferWidth - 255 : tsl::cfg::FramebufferWidth - 255 + 40, 64+2, (tsl::widgetBackdropColor));
+    }
+    
+    // Constants for centering calculations
+    const int backdropCenterX = 247 + ((tsl::cfg::FramebufferWidth - 255) >> 1);
+    
+    // Calculate base Y offset
+    size_t y_offset = 55+2-1; // Adjusted y_offset for drawing
+    
+    if (ult::centerWidgetAlignment) {
+        // CENTERED ALIGNMENT (current code logic)
+        
+        // Calculate total width for centering
+        int ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
+        
+        // Draw RAM info centered
+        int currentX = backdropCenterX - (ramWidth >> 1);
+        renderer->drawString(ramString, false, currentX, y_offset, 20, renderer->a(ramColor));
+        
+    } else {
+        // RIGHT ALIGNMENT (old code style)
+        
+        // Calculate string width
+        s32 ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
+        
+        // Draw RAM string
+        renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - ramWidth - 20 - 5, y_offset, 20, renderer->a(ramColor));
+    }
 }
 
 tsl::elm::Element *GuiMain::createUI() {
