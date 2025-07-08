@@ -38,13 +38,17 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	Sysmodules
-APP_VERSION	:=	1.3.4
+APP_VERSION	:=	1.3.5
 
 TARGET		:=	ovlSysmodules
 BUILD		:=	build
-SOURCES		:=	source libs/libultrahand/libultra/source
+SOURCES		:=	source
 DATA		:=	data
-INCLUDES	:=	libs/libultrahand/libultra/include libs/libultrahand/libtesla/include include
+INCLUDES	:=  include
+
+# This location should reflect where you place the libultrahand directory (lib can vary between projects).
+include ${TOPDIR}/libs/libultrahand/ultrahand.mk
+
 
 #ifeq ($(RELEASE),)
 #	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --dirty --always)
