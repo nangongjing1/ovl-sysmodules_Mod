@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	Sysmodules
-APP_VERSION	:=	1.3.5
+APP_VERSION	:=	1.3.7
 
 TARGET		:=	ovlSysmodules
 BUILD		:=	build
@@ -210,9 +210,11 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 all	:	 $(OUTPUT).ovl
 
-$(OUTPUT).ovl		:	$(OUTPUT).elf $(OUTPUT).nacp 
+$(OUTPUT).ovl: $(OUTPUT).elf $(OUTPUT).nacp 
 	@elf2nro $< $@ $(NROFLAGS)
 	@echo "built ... $(notdir $(OUTPUT).ovl)"
+	@printf 'ULTR' >> $@
+	@printf "Ultrahand signature has been added.\n"
 
 $(OUTPUT).elf	:	$(OFILES)
 
