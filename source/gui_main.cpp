@@ -198,7 +198,7 @@ tsl::elm::Element *GuiMain::createUI() {
     auto *rootFrame = new tsl::elm::HeaderOverlayFrame(97);
     rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
         renderer->drawString("Sysmodules", false, 20, 50+2, 32, renderer->a(tsl::defaultOverlayColor));
-        renderer->drawString(VERSION, false, 20, 50+23, 15, renderer->a(tsl::versionTextColor));
+        renderer->drawString(VERSION, false, 20, 52+23, 15, renderer->a(tsl::bannerVersionTextColor));
 
         drawMemoryWidget(renderer);
     }));
