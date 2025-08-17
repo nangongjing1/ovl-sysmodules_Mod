@@ -13,12 +13,12 @@ static char pathBuffer[FS_MAX_PATH];
 
 constexpr const char *const descriptions[2][2] = {
     [0] = {
-        [0] = "Off | \uE098",
-        [1] = "Off | \uE0F4",
+        [0] = "Off",
+        [1] = "Off",
     },
     [1] = {
-        [0] = "On | \uE098",
-        [1] = "On | \uE0F4",
+        [0] = "On",
+        [1] = "On",
     },
 };
 
@@ -34,6 +34,8 @@ GuiMain::GuiMain() {
         return;
     tsl::hlp::ScopeGuard dirGuard([&] { fsDirClose(&contentDir); });
 
+    SystemModule module;
+
     /* Iterate over contents folder. */
     for (const auto &entry : FsDirIterator(contentDir)) {
         FsFile toolboxFile;
@@ -44,14 +46,14 @@ GuiMain::GuiMain() {
         tsl::hlp::ScopeGuard fileGuard([&] { fsFileClose(&toolboxFile); });
 
         /* Get toolbox file size. */
-        s64 size;
+        static s64 size;
         rc = fsFileGetSize(&toolboxFile, &size);
         if (R_FAILED(rc))
             continue;
 
         /* Read toolbox file. */
         std::string toolBoxData(size, '\0');
-        u64 bytesRead;
+        static u64 bytesRead;
         rc = fsFileRead(&toolboxFile, 0, toolBoxData.data(), size, FsReadOption_None, &bytesRead);
         if (R_FAILED(rc))
             continue;
@@ -59,14 +61,14 @@ GuiMain::GuiMain() {
         /* Parse toolbox file data. */
         json toolboxFileContent = json::parse(toolBoxData);
 
-        const std::string &sysmoduleProgramIdString = toolboxFileContent["tid"];
-        u64 sysmoduleProgramId = std::strtoul(sysmoduleProgramIdString.c_str(), nullptr, 16);
+        const std::string& sysmoduleProgramIdString = toolboxFileContent["tid"];
+        const u64 sysmoduleProgramId = std::strtoul(sysmoduleProgramIdString.c_str(), nullptr, 16);
 
         /* Let's not allow Tesla to be killed with this. */
         if (sysmoduleProgramId == 0x420000000007E51AULL)
             continue;
 
-        SystemModule module = {
+        module = {
             .listItem = new tsl::elm::ListItem(toolboxFileContent["name"]),
             .programId = sysmoduleProgramId,
             .needReboot = toolboxFileContent["requires_reboot"],
@@ -78,14 +80,14 @@ GuiMain::GuiMain() {
             fsFsCreateDirectory(&this->m_fs, pathBuffer);
             std::snprintf(pathBuffer, FS_MAX_PATH, boot2FlagFormat, module.programId);
 
-            if (click & HidNpadButton_A && !module.needReboot) {
+            if (click & KEY_A && !module.needReboot) {
                 if (this->isRunning(module)) {
                     /* Kill process. */
                     pmshellTerminateProgram(module.programId);
 
                     /* Remove boot2 flag file. */
-                    if (this->hasFlag(module))
-                        fsFsDeleteFile(&this->m_fs, pathBuffer);
+                    //if (this->hasFlag(module))
+                    //    fsFsDeleteFile(&this->m_fs, pathBuffer);
                 } else {
                     /* Start process. */
                     const NcmProgramLocation programLocation{
@@ -96,13 +98,13 @@ GuiMain::GuiMain() {
                     pmshellLaunchProgram(0, &programLocation, &pid);
 
                     /* Create boot2 flag file. */
-                    if (!this->hasFlag(module))
-                        fsFsCreateFile(&this->m_fs, pathBuffer, 0, FsCreateOption(0));
+                    //if (!this->hasFlag(module))
+                    //    fsFsCreateFile(&this->m_fs, pathBuffer, 0, FsCreateOption(0));
                 }
                 return true;
             }
 
-            if (click & HidNpadButton_Y) {
+            if (click & KEY_Y) {// || (click & KEY_A && module.needReboot)) {
                 if (this->hasFlag(module)) {
                     /* Remove boot2 flag file. */
                     fsFsDeleteFile(&this->m_fs, pathBuffer);
@@ -117,6 +119,18 @@ GuiMain::GuiMain() {
         });
         this->m_sysmoduleListItems.push_back(std::move(module));
     }
+
+    /* Sort modules alphabetically by name */
+    this->m_sysmoduleListItems.sort([](const SystemModule &a, const SystemModule &b) {
+        return a.listItem->getText() < b.listItem->getText();
+    });
+
+    /* Sort modules by program ID */
+    //this->m_sysmoduleListItems.sort([](const SystemModule &a, const SystemModule &b) {
+    //    return a.programId < b.programId;
+    //});
+
+
     this->m_scanned = true;
 }
 
@@ -132,18 +146,50 @@ inline void drawMemoryWidget(auto renderer) {
     const u64 ticksPerSecond = armGetSystemTickFreq();
     
     // Get the current tick count
-    u64 currentTick = armGetSystemTick();
+    const u64 currentTick = armGetSystemTick();
     
     // Check if this is the first run or at least one second has passed since the last update
     if (lastUpdateTick == 0 || currentTick - lastUpdateTick >= ticksPerSecond) {
         // Update RAM information
-        u64 RAM_Used_system_u, RAM_Total_system_u;
+        static u64 RAM_Used_system_u, RAM_Total_system_u;
         svcGetSystemInfo(&RAM_Used_system_u, 1, INVALID_HANDLE, 2);
         svcGetSystemInfo(&RAM_Total_system_u, 0, INVALID_HANDLE, 2);
         
-        // Calculate free RAM and store in the buffer
-        float freeRamMB = (static_cast<float>(RAM_Total_system_u - RAM_Used_system_u) / (1024.0f * 1024.0f));
-        snprintf(ramString, sizeof(ramString), "%.2f MB %s", freeRamMB, ult::FREE.c_str());
+        // Calculate free RAM in bytes
+        const u64 freeRamBytes = RAM_Total_system_u - RAM_Used_system_u;
+        
+        // Determine unit and value
+        float value;
+        const char* unit;
+        
+        if (freeRamBytes >= 1024ULL * 1024 * 1024) {
+            // Use GB (1 GB or more)
+            value = static_cast<float>(freeRamBytes) / (1024.0f * 1024.0f * 1024.0f);
+            unit = "GB";
+        } else {
+            // Use MB
+            value = static_cast<float>(freeRamBytes) / (1024.0f * 1024.0f);
+            unit = "MB";
+        }
+        
+        // Format with 4 significant figures
+        int decimalPlaces;
+        if (value >= 1000.0f) {
+            decimalPlaces = 0;  // e.g., 1234
+        } else if (value >= 100.0f) {
+            decimalPlaces = 1;  // e.g., 123.4
+        } else if (value >= 10.0f) {
+            decimalPlaces = 2;  // e.g., 12.34
+        } else if (value >= 1.0f) {
+            decimalPlaces = 3;  // e.g., 1.234
+        } else {
+            decimalPlaces = 3;  // e.g., 0.123
+        }
+        
+        snprintf(ramString, sizeof(ramString), "%.*f %s %s", decimalPlaces, value, unit, ult::FREE.c_str());
+        
+        // Convert to MB for threshold comparison (keep original thresholds)
+        const float freeRamMB = static_cast<float>(freeRamBytes) / (1024.0f * 1024.0f);
         
         if (freeRamMB >= 9.0f){
             ramColor = tsl::healthyRamTextColor; // Green: R=0, G=15, B=0
@@ -169,69 +215,71 @@ inline void drawMemoryWidget(auto renderer) {
     const int backdropCenterX = 247 + ((tsl::cfg::FramebufferWidth - 255) >> 1);
     
     // Calculate base Y offset
-    size_t y_offset = 55+2-1; // Adjusted y_offset for drawing
+    const size_t y_offset = 55+2-1; // Adjusted y_offset for drawing
     
     if (ult::centerWidgetAlignment) {
         // CENTERED ALIGNMENT (current code logic)
         
         // Calculate total width for centering
-        int ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
+        const int ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
         
         // Draw RAM info centered
-        int currentX = backdropCenterX - (ramWidth >> 1);
-        renderer->drawString(ramString, false, currentX, y_offset, 20, renderer->a(ramColor));
+        const int currentX = backdropCenterX - (ramWidth >> 1);
+        renderer->drawString(ramString, false, currentX, y_offset, 20, (ramColor));
         
     } else {
         // RIGHT ALIGNMENT (old code style)
         
         // Calculate string width
-        s32 ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
+        const s32 ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
         
         // Draw RAM string
-        renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - ramWidth - 20 - 5, y_offset, 20, renderer->a(ramColor));
+        renderer->drawString(ramString, false, tsl::cfg::FramebufferWidth - ramWidth - 20 - 5, y_offset, 20, (ramColor));
     }
 }
 
 tsl::elm::Element *GuiMain::createUI() {
     //tsl::elm::OverlayFrame *rootFrame = new tsl::elm::OverlayFrame("Sysmodules", VERSION);
 
-    auto *rootFrame = new tsl::elm::HeaderOverlayFrame(97);
+    auto* rootFrame = new tsl::elm::HeaderOverlayFrame(97);
     rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-        renderer->drawString("Sysmodules", false, 20, 50+2, 32, renderer->a(tsl::defaultOverlayColor));
-        renderer->drawString(VERSION, false, 20, 52+23, 15, renderer->a(tsl::bannerVersionTextColor));
+        renderer->drawString("Sysmodules", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
+        renderer->drawString(VERSION, false, 20, 52+23, 15, (tsl::bannerVersionTextColor));
 
         drawMemoryWidget(renderer);
     }));
 
 
     if (this->m_sysmoduleListItems.size() == 0) {
-        const char *description = this->m_scanned ? "No sysmodules found!" : "Scan failed!";
+        const char* description = this->m_scanned ? "No sysmodules found!" : "Scan failed!";
 
-        auto *warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE150", false, 180, 250, 90, renderer->a(0xFFFF));
-            renderer->drawString(description, false, 110, 340, 25, renderer->a(0xFFFF));
+        auto* warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString("\uE150", false, 180, 250, 90, (tsl::headerTextColor));
+            renderer->drawString(description, false, 110, 340, 25, (tsl::headerTextColor));
         });
 
         rootFrame->setContent(warning);
     } else {
-        tsl::elm::List *sysmoduleList = new tsl::elm::List();
+        tsl::elm::List* sysmoduleList = new tsl::elm::List();
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic  |  \uE0E0  Toggle  |  \uE0E3  Toggle auto start", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic Toggle Auto Start Toggle", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  These sysmodules can be toggled at any time.", false, x + 5, y + 20-4, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("  These sysmodules can be toggled at any time.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
-        for (const auto &module : this->m_sysmoduleListItems) {
+        for (const auto& module : this->m_sysmoduleListItems) {
             if (!module.needReboot)
                 sysmoduleList->addItem(module.listItem);
         }
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static  |  \uE0E3  Toggle auto start", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static Toggle Auto Start", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  These sysmodules need a reboot to work.", false, x + 5, y + 20-4, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("  These sysmodules need a reboot to work.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
-        for (const auto &module : this->m_sysmoduleListItems) {
-            if (module.needReboot)
+        for (const auto& module : this->m_sysmoduleListItems) {
+            if (module.needReboot) {
+                module.listItem->disableClickAnimation();
                 sysmoduleList->addItem(module.listItem);
+            }
         }
         rootFrame->setContent(sysmoduleList);
     }
@@ -251,10 +299,10 @@ void GuiMain::update() {
 }
 
 void GuiMain::updateStatus(const SystemModule &module) {
-    bool running = this->isRunning(module);
-    bool hasFlag = this->hasFlag(module);
+    const bool running = this->isRunning(module);
+    const bool hasFlag = this->hasFlag(module);
 
-    const char *desc = descriptions[running][hasFlag];
+    const char* desc = descriptions[running][hasFlag];
     module.listItem->setValue(desc);
 }
 
