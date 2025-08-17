@@ -5,13 +5,13 @@
 #include <json.hpp>
 using json = nlohmann::json;
 
-constexpr const char *const amsContentsPath = "/atmosphere/contents";
-constexpr const char *const boot2FlagFormat = "/atmosphere/contents/%016lX/flags/boot2.flag";
-constexpr const char *const boot2FlagFolder = "/atmosphere/contents/%016lX/flags";
+constexpr const char* const amsContentsPath = "/atmosphere/contents";
+constexpr const char* const boot2FlagFormat = "/atmosphere/contents/%016lX/flags/boot2.flag";
+constexpr const char* const boot2FlagFolder = "/atmosphere/contents/%016lX/flags";
 
 static char pathBuffer[FS_MAX_PATH];
 
-constexpr const char *const descriptions[2][2] = {
+constexpr const char* const descriptions[2][2] = {
     [0] = {
         [0] = "Off",
         [1] = "Off",
@@ -37,7 +37,7 @@ GuiMain::GuiMain() {
     SystemModule module;
 
     /* Iterate over contents folder. */
-    for (const auto &entry : FsDirIterator(contentDir)) {
+    for (const auto& entry : FsDirIterator(contentDir)) {
         FsFile toolboxFile;
         std::snprintf(pathBuffer, FS_MAX_PATH, "/atmosphere/contents/%.*s/toolbox.json", FS_MAX_PATH - 35, entry.name);
         rc = fsFsOpenFile(&this->m_fs, pathBuffer, FsOpenMode_Read, &toolboxFile);
@@ -159,7 +159,7 @@ inline void drawMemoryWidget(auto renderer) {
         const u64 freeRamBytes = RAM_Total_system_u - RAM_Used_system_u;
         
         // Determine unit and value
-        float value;
+        static float value;
         const char* unit;
         
         if (freeRamBytes >= 1024ULL * 1024 * 1024) {
@@ -173,7 +173,7 @@ inline void drawMemoryWidget(auto renderer) {
         }
         
         // Format with 4 significant figures
-        int decimalPlaces;
+        static int decimalPlaces;
         if (value >= 1000.0f) {
             decimalPlaces = 0;  // e.g., 1234
         } else if (value >= 100.0f) {
@@ -238,11 +238,11 @@ inline void drawMemoryWidget(auto renderer) {
     }
 }
 
-tsl::elm::Element *GuiMain::createUI() {
+tsl::elm::Element* GuiMain::createUI() {
     //tsl::elm::OverlayFrame *rootFrame = new tsl::elm::OverlayFrame("Sysmodules", VERSION);
 
     auto* rootFrame = new tsl::elm::HeaderOverlayFrame(97);
-    rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+    rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
         renderer->drawString("Sysmodules", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
         renderer->drawString(VERSION, false, 20, 52+23, 15, (tsl::bannerVersionTextColor));
 
@@ -253,7 +253,7 @@ tsl::elm::Element *GuiMain::createUI() {
     if (this->m_sysmoduleListItems.size() == 0) {
         const char* description = this->m_scanned ? "No sysmodules found!" : "Scan failed!";
 
-        auto* warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+        auto* warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("\uE150", false, 180, 250, 90, (tsl::headerTextColor));
             renderer->drawString(description, false, 110, 340, 25, (tsl::headerTextColor));
         });
@@ -263,7 +263,7 @@ tsl::elm::Element *GuiMain::createUI() {
         tsl::elm::List* sysmoduleList = new tsl::elm::List();
 
         sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic Toggle Auto Start Toggle", true));
-        sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+        sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("  These sysmodules can be toggled at any time.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
         for (const auto& module : this->m_sysmoduleListItems) {
@@ -272,7 +272,7 @@ tsl::elm::Element *GuiMain::createUI() {
         }
 
         sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static Toggle Auto Start", true));
-        sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+        sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("  These sysmodules need a reboot to work.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
         for (const auto& module : this->m_sysmoduleListItems) {
@@ -293,7 +293,7 @@ void GuiMain::update() {
     if (counter++ % 20 != 0)
         return;
 
-    for (const auto &module : this->m_sysmoduleListItems) {
+    for (const auto& module : this->m_sysmoduleListItems) {
         this->updateStatus(module);
     }
 }

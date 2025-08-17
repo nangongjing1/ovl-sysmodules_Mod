@@ -19,6 +19,6 @@ class OverlaySysmodules : public tsl::Overlay {
     }
 };
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     return tsl::loop<OverlaySysmodules>(argc, argv);
 }
