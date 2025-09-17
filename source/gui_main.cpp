@@ -38,8 +38,7 @@ GuiMain::GuiMain() {
 
     /* Iterate over contents folder. */
     for (const auto& entry : FsDirIterator(contentDir)) {
-        const char invalidTID[] = "0100";
-        if ((std::memcmp(entry.name, &invalidTID, std::strlen(invalidTID)) == 0) && (std::strlen(entry.name) == 16)) {
+        if ((*(uint32_t*)entry.name == *(uint32_t*)&"0100") && (std::strlen(entry.name) == 16)) {
             bool skip = false;
             for (size_t i = 4; i < 12; i++) { //0100000000010000-0100FFFFFFFFFFFF
                 if (entry.name[i] >= '1') {
