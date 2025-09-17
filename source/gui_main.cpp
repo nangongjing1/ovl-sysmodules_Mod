@@ -38,16 +38,8 @@ GuiMain::GuiMain() {
 
     /* Iterate over contents folder. */
     for (const auto& entry : FsDirIterator(contentDir)) {
-        if (*(uint32_t*)entry.name == *(uint32_t*)&"0100") {
-            bool skip = false;
-            for (size_t i = 4; i < 12; i++) { //0100000000010000-0100FFFFFFFFFFFF
-                if (entry.name[i] != '0') {
-                    skip = true;
-                    break;
-                }
-            }
-            if (skip) continue;
-        }
+        if (*(uint32_t*)entry.name == *(uint32_t*)&"0100" && *(uint64_t*)(&entry.name[4]) != *(uint64_t*)&"00000000")
+            continue;
         FsFile toolboxFile;
         std::snprintf(pathBuffer, FS_MAX_PATH, "/atmosphere/contents/%.*s/toolbox.json", FS_MAX_PATH - 35, entry.name);
         rc = fsFsOpenFile(&this->m_fs, pathBuffer, FsOpenMode_Read, &toolboxFile);
