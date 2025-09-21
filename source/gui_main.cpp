@@ -264,7 +264,7 @@ tsl::elm::Element* GuiMain::createUI() {
     } else {
         tsl::elm::List* sysmoduleList = new tsl::elm::List();
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic Toggle Auto Start Toggle", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic   Auto Start   Toggle", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("  These sysmodules can be toggled at any time.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
@@ -273,7 +273,7 @@ tsl::elm::Element* GuiMain::createUI() {
                 sysmoduleList->addItem(module.listItem);
         }
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static Toggle Auto Start", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static   Auto Start", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("  These sysmodules need a reboot to work.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
