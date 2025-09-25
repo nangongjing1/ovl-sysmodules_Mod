@@ -13,12 +13,12 @@ static char pathBuffer[FS_MAX_PATH];
 
 constexpr const char* const descriptions[2][2] = {
     [0] = {
-        [0] = "Off",
-        [1] = "Off",
+        [0] = "关闭",
+        [1] = "关闭",
     },
     [1] = {
-        [0] = "On",
-        [1] = "On",
+        [0] = "开启",
+        [1] = "开启",
     },
 };
 
@@ -245,7 +245,7 @@ tsl::elm::Element* GuiMain::createUI() {
 
     auto* rootFrame = new tsl::elm::HeaderOverlayFrame(97);
     rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
-        renderer->drawString("Sysmodules", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
+        renderer->drawString("系统模块", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
         renderer->drawString(VERSION, false, 20, 52+23, 15, (tsl::bannerVersionTextColor));
 
         drawMemoryWidget(renderer);
@@ -253,7 +253,7 @@ tsl::elm::Element* GuiMain::createUI() {
 
 
     if (this->m_sysmoduleListItems.size() == 0) {
-        const char* description = this->m_scanned ? "No sysmodules found!" : "Scan failed!";
+        const char* description = this->m_scanned ? "未找到系统插件!" : "扫描失败!";
 
         auto* warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("\uE150", false, 180, 250, 90, (tsl::headerTextColor));
@@ -264,18 +264,18 @@ tsl::elm::Element* GuiMain::createUI() {
     } else {
         tsl::elm::List* sysmoduleList = new tsl::elm::List();
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Dynamic   Auto Start   Toggle", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("动态插件  按切换自启动  按切换开关", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("  These sysmodules can be toggled at any time.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
+            renderer->drawString("  这些系统插件可以直接切换开关", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
         for (const auto& module : this->m_sysmoduleListItems) {
             if (!module.needReboot)
                 sysmoduleList->addItem(module.listItem);
         }
 
-        sysmoduleList->addItem(new tsl::elm::CategoryHeader("Static   Auto Start", true));
+        sysmoduleList->addItem(new tsl::elm::CategoryHeader("静态插件  按切换自启动", true));
         sysmoduleList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("  These sysmodules need a reboot to work.", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
+            renderer->drawString("  这些系统插件需要重启切换", false, x + 5, y + 20-7, 15, (tsl::warningTextColor));
         }), 30);
         for (const auto& module : this->m_sysmoduleListItems) {
             if (module.needReboot) {
