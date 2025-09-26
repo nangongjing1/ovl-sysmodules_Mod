@@ -245,7 +245,7 @@ tsl::elm::Element* GuiMain::createUI() {
 
     auto* rootFrame = new tsl::elm::HeaderOverlayFrame(97);
     rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
-        renderer->drawString("系统模块", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
+        renderer->drawString("后台管理", false, 20, 50+2, 32, (tsl::defaultOverlayColor));
         renderer->drawString(VERSION, false, 20, 52+23, 15, (tsl::bannerVersionTextColor));
 
         drawMemoryWidget(renderer);
