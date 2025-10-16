@@ -36,6 +36,8 @@ GuiMain::GuiMain() {
 
     SystemModule module;
 
+    std::string listItemText;
+
     /* Iterate over contents folder. */
     for (const auto& entry : FsDirIterator(contentDir)) {
         if (*(uint32_t*)entry.name == *(uint32_t*)&"0100" && *(uint64_t*)(&entry.name[4]) != *(uint64_t*)&"00000000")
@@ -70,7 +72,7 @@ GuiMain::GuiMain() {
         if (sysmoduleProgramId == 0x420000000007E51AULL)
             continue;
 
-        std::string listItemText = toolboxFileContent["name"];
+        listItemText = toolboxFileContent["name"];
         if (toolboxFileContent.contains("version")) {
             listItemText += "" + toolboxFileContent["version"].get<std::string>();
         }
@@ -311,7 +313,7 @@ void GuiMain::updateStatus(const SystemModule &module) {
     const bool hasFlag = this->hasFlag(module);
 
     const char* desc = descriptions[running][hasFlag];
-    module.listItem->setValue(desc);
+    module.listItem->setValue(desc, !running);
 }
 
 bool GuiMain::hasFlag(const SystemModule &module) {
