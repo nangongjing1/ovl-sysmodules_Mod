@@ -70,8 +70,14 @@ GuiMain::GuiMain() {
         if (sysmoduleProgramId == 0x420000000007E51AULL)
             continue;
 
+        std::string listItemText = toolboxFileContent["name"];
+        if (toolboxFileContent.contains("version")) {
+            listItemText += "" + toolboxFileContent["version"].get<std::string>();
+        }
+
+
         module = {
-            .listItem = new tsl::elm::ListItem(toolboxFileContent["name"]),
+            .listItem = new tsl::elm::ListItem(listItemText),
             .programId = sysmoduleProgramId,
             .needReboot = toolboxFileContent["requires_reboot"],
         };
