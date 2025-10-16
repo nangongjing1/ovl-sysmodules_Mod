@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	Sysmodules
-APP_VERSION	:=	1.3.9
+APP_VERSION	:=	1.4.0
 
 TARGET		:=	ovlSysmodules
 BUILD		:=	build
@@ -71,7 +71,7 @@ UI_OVERRIDE_PATH := /config/sys-modules/
 CFLAGS += -DUI_OVERRIDE_PATH="\"$(UI_OVERRIDE_PATH)\""
 
 
-CXXFLAGS := $(CFLAGS) -std=c++20 -Wno-dangling-else -ffast-math
+CXXFLAGS := $(CFLAGS) -std=c++26 -Wno-dangling-else -ffast-math
 
 ASFLAGS := $(ARCH)
 LDFLAGS += -specs=$(DEVKITPRO)/libnx/switch.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
