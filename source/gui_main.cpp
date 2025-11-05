@@ -90,6 +90,7 @@ GuiMain::GuiMain() {
             fsFsCreateDirectory(&this->m_fs, pathBuffer);
             std::snprintf(pathBuffer, FS_MAX_PATH, boot2FlagFormat, module.programId);
 
+            if (module.needReboot) module.listItem->isLocked = true;
             if (click & KEY_A && !module.needReboot) {
                 if (this->isRunning(module)) {
                     /* Kill process. */
@@ -118,10 +119,14 @@ GuiMain::GuiMain() {
                 if (this->hasFlag(module)) {
                     /* Remove boot2 flag file. */
                     fsFsDeleteFile(&this->m_fs, pathBuffer);
+
                 } else {
                     /* Create boot2 flag file. */
                     fsFsCreateFile(&this->m_fs, pathBuffer, 0, FsCreateOption(0));
                 }
+                //module.listItem->triggerClickAnimation();
+                triggerRumbleClick.store(true, std::memory_order_release);
+                triggerSettingsSound.store(true, std::memory_order_release);
                 return true;
             }
 
