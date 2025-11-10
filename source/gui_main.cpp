@@ -21,6 +21,9 @@ constexpr const char* const descriptions[2][2] = {
     },
 };
 
+// Pre-allocate buffer for file reading to avoid repeated allocations
+static char fileBuffer[4096];
+
 GuiMain::GuiMain() {
     DIR* dir = opendir(amsContentsPath);
     if (!dir)
@@ -62,16 +65,18 @@ GuiMain::GuiMain() {
         }
         std::fseek(fp, 0, SEEK_SET);
 
-        // Read toolbox file
-        std::string toolBoxData(size, '\0');
-        const size_t bytesRead = std::fread(toolBoxData.data(), 1, size, fp);
+        // Read directly into static buffer - no allocation
+        const size_t bytesRead = std::fread(fileBuffer, 1, size, fp);
         std::fclose(fp);
         
         if (bytesRead != static_cast<size_t>(size))
             continue;
 
-        // Parse JSON using cJSON
-        cJSON* toolboxFileContent = cJSON_Parse(toolBoxData.c_str());
+        // Null-terminate for cJSON
+        fileBuffer[size] = '\0';
+
+        // Parse JSON using cJSON - parse directly from static buffer
+        cJSON* toolboxFileContent = cJSON_ParseWithLength(fileBuffer, size);
         if (!toolboxFileContent)
             continue;
 
@@ -104,8 +109,8 @@ GuiMain::GuiMain() {
             continue;
         }
 
-        // Build list item text efficiently
-        listItemText = nameItem->valuestring;
+        // Build list item text efficiently - assign directly without clearing
+        listItemText.assign(nameItem->valuestring);
         
         cJSON* versionItem = cJSON_GetObjectItem(toolboxFileContent, "version");
         if (versionItem && cJSON_IsString(versionItem)) {
@@ -326,9 +331,8 @@ void GuiMain::updateStatus(const SystemModule &module) {
 }
 
 bool GuiMain::hasFlag(const SystemModule &module) {
-    // Use stat() to check file existence - faster than opening
-    struct stat st;
-    return stat(module.flagPath, &st) == 0 && S_ISREG(st.st_mode);
+    // Use access() for fastest file existence check
+    return access(module.flagPath, F_OK) == 0;
 }
 
 bool GuiMain::isRunning(const SystemModule &module) {
