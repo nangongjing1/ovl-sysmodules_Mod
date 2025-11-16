@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	Sysmodules
-APP_VERSION	:=	1.4.2
+APP_VERSION	:=	1.4.3
 
 TARGET		:=	ovlSysmodules
 BUILD		:=	build
@@ -61,7 +61,8 @@ NO_ICON		:=  1
 #---------------------------------------------------------------------------------
 ARCH := -march=armv8-a+simd+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS := -Wall -Os -ffunction-sections -fdata-sections -flto\
+CFLAGS := -Wall -Os -ffunction-sections -fdata-sections -flto -fuse-linker-plugin -fomit-frame-pointer -finline-small-functions \
+            -fno-strict-aliasing -frename-registers -falign-functions=16 \
 			$(ARCH) $(DEFINES)
 
 CFLAGS += $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -DVERSION="\"$(APP_VERSION)\"" -D_FORTIFY_SOURCE=2
@@ -76,7 +77,7 @@ CXXFLAGS := $(CFLAGS) -std=c++26 -Wno-dangling-else -ffast-math
 ASFLAGS := $(ARCH)
 LDFLAGS += -specs=$(DEVKITPRO)/libnx/switch.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS := -lcurl -lz -lzzip -lmbedtls -lmbedx509 -lmbedcrypto -ljansson -lnx
+LIBS := -lcurl -lz -lzzip -lmbedtls -lmbedx509 -lmbedcrypto -lnx
 
 CXXFLAGS += -fno-exceptions -ffunction-sections -fdata-sections -fno-rtti
 LDFLAGS += -Wl,--gc-sections -Wl,--as-needed
