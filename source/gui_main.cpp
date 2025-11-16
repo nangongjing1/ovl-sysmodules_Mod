@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <cJSON.h>
+#include <algorithm>
 
 constexpr const char* const amsContentsPath = "/atmosphere/contents";
 constexpr const char* const boot2FlagFormat = "/atmosphere/contents/%016lX/flags/boot2.flag";
@@ -25,6 +26,9 @@ constexpr const char* const descriptions[2][2] = {
 static char fileBuffer[4096];
 
 GuiMain::GuiMain() {
+    // Pre-allocate vector for typical number of modules (avoids reallocations)
+    m_sysmoduleListItems.reserve(32);
+    
     DIR* dir = opendir(amsContentsPath);
     if (!dir)
         return;
@@ -179,16 +183,21 @@ GuiMain::GuiMain() {
 
     closedir(dir);
 
-    /* Sort modules alphabetically by name */
-    this->m_sysmoduleListItems.sort([](const SystemModule &a, const SystemModule &b) {
-        return a.listItem->getText() < b.listItem->getText();
-    });
+    /* Sort modules alphabetically by name using std::sort (faster than list::sort) */
+    std::sort(this->m_sysmoduleListItems.begin(), this->m_sysmoduleListItems.end(),
+        [](const SystemModule &a, const SystemModule &b) {
+            return a.listItem->getText() < b.listItem->getText();
+        });
 
     this->m_scanned = true;
 }
 
 GuiMain::~GuiMain() {
-    // No filesystem cleanup needed
+    // Signal that we're shutting down to skip any pending updates
+    m_isActive = false;
+    
+    // Fast cleanup - vector destructor handles the rest
+    //m_sysmoduleListItems.clear();
 }
 
 // Method to draw available RAM only
@@ -311,6 +320,10 @@ tsl::elm::Element* GuiMain::createUI() {
 }
 
 void GuiMain::update() {
+    // Early exit if shutting down - avoids unnecessary work during cleanup
+    if (!m_isActive)
+        return;
+        
     static u32 counter = 0;
 
     // Check every 30 frames (~0.5 seconds at 60fps)

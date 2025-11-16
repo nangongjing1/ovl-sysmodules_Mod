@@ -1,5 +1,5 @@
 #pragma once
-#include <list>
+#include <vector>
 #include <tesla.hpp>
 
 struct SystemModule {
@@ -12,13 +12,17 @@ struct SystemModule {
 
 class GuiMain : public tsl::Gui {
   private:
-    std::list<SystemModule> m_sysmoduleListItems;
+    std::vector<SystemModule> m_sysmoduleListItems;  // Changed from std::list to std::vector
     bool m_scanned = false;
+    bool m_isActive = true;  // Track if GUI is still active
+    
   public:
     GuiMain();
     ~GuiMain();
+    
     virtual tsl::elm::Element *createUI();
     virtual void update() override;
+    
   private:
     void updateStatus(const SystemModule &module);
     bool hasFlag(const SystemModule &module);
