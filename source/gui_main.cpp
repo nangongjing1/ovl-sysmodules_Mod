@@ -1,9 +1,5 @@
 #include "gui_main.hpp"
 
-#include <sys/stat.h>
-#include <dirent.h>
-#include <cJSON.h>
-#include <algorithm>
 
 constexpr const char* const amsContentsPath = "/atmosphere/contents";
 constexpr const char* const boot2FlagFormat = "/atmosphere/contents/%016lX/flags/boot2.flag";
@@ -261,7 +257,21 @@ inline void drawMemoryWidget(auto renderer) {
     }
     
     const int backdropCenterX = 247 + ((tsl::cfg::FramebufferWidth - 255) >> 1);
-    const size_t y_offset = 56;
+    
+    // First line: "System" label
+    size_t y_offset = 44 + 2 - 1;  // Same as the clock y_offset in the reference code
+    const char* systemLabel = ult::SYSTEM_RAM.c_str();
+    
+    if (ult::centerWidgetAlignment) {
+        const int labelWidth = renderer->getTextDimensions(systemLabel, false, 20).first;
+        renderer->drawString(systemLabel, false, backdropCenterX - (labelWidth >> 1), y_offset, 20, tsl::headerTextColor);
+    } else {
+        const int labelWidth = renderer->getTextDimensions(systemLabel, false, 20).first;
+        renderer->drawString(systemLabel, false, tsl::cfg::FramebufferWidth - labelWidth - 25, y_offset, 20, tsl::headerTextColor);
+    }
+    
+    // Second line: RAM info
+    y_offset += 22;  // Same spacing as in the reference code
     
     if (ult::centerWidgetAlignment) {
         const int ramWidth = renderer->getTextDimensions(ramString, false, 20).first;
