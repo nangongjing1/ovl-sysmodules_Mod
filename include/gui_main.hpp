@@ -1,5 +1,9 @@
 #pragma once
 #include <vector>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <cJSON.h>
+#include <algorithm>
 #include <tesla.hpp>
 
 struct SystemModule {
