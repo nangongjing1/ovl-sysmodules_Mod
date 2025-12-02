@@ -255,10 +255,10 @@ inline void drawMemoryWidget(auto renderer) {
         lastUpdateTick = currentTick;
     }
     
-    renderer->drawRect(239, 15, 1, 66, tsl::separatorColor);
+    renderer->drawRect(239, 15, 1, 66, renderer->aWithOpacity(tsl::separatorColor));
     
     if (!ult::hideWidgetBackdrop) {
-        renderer->drawUniformRoundedRect(247, 15, (ult::extendedWidgetBackdrop) ? tsl::cfg::FramebufferWidth - 255 : tsl::cfg::FramebufferWidth - 255 + 40, 66, tsl::widgetBackdropColor);
+        renderer->drawUniformRoundedRect(247, 15, (ult::extendedWidgetBackdrop) ? tsl::cfg::FramebufferWidth - 255 : tsl::cfg::FramebufferWidth - 255 + 40, 66, renderer->a(tsl::widgetBackdropColor));
     }
     
     const int backdropCenterX = 247 + ((tsl::cfg::FramebufferWidth - 255) >> 1);
