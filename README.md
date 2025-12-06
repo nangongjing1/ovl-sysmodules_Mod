@@ -1,6 +1,6 @@
 # ovlSysmodule
 
-A Tesla overlay that allows you to toggle sysmodules on the fly
+An Ultrahand / Tesla overlay that allows you to toggle sysmodules on the fly
 
 ## Installation
 
