@@ -240,7 +240,8 @@ inline void drawMemoryWidget(auto renderer) {
             decimalPlaces = 3;
         }
         
-        std::snprintf(ramString, sizeof(ramString), "%.*f %s %s", decimalPlaces, value, unit, ult::FREE.c_str());
+        // std::snprintf(ramString, sizeof(ramString), "%.*f %s %s", decimalPlaces, value, unit, ult::FREE.c_str());
+        std::snprintf(ramString, sizeof(ramString), "%.*f %s", decimalPlaces, value, unit);
         
         const float freeRamMB = static_cast<float>(freeRamBytes) / (1024.0f * 1024.0f);
         

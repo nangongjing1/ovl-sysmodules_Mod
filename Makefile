@@ -40,7 +40,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 APP_TITLE	:=	Sysmodules
 APP_VERSION	:=	1.4.5
 
-TARGET		:=	ovlSysmodules
+TARGET		:=	ovl-sysmodules
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
