@@ -1,6 +1,5 @@
 #include "gui_main.hpp"
 
-
 constexpr const char* const amsContentsPath = "/atmosphere/contents";
 constexpr const char* const boot2FlagFormat = "/atmosphere/contents/%016lX/flags/boot2.flag";
 constexpr const char* const boot2FlagFolder = "/atmosphere/contents/%016lX/flags";
@@ -118,10 +117,16 @@ GuiMain::GuiMain() {
             listItemText += versionItem->valuestring;
         }
 
+        // Create formatted title ID string
+        char titleIdBuffer[32];
+        std::snprintf(titleIdBuffer, sizeof(titleIdBuffer), "%016lX", sysmoduleProgramId);
+
         module = {
             .listItem = new tsl::elm::ListItem(listItemText),
             .programId = sysmoduleProgramId,
             .needReboot = static_cast<bool>(cJSON_IsTrue(rebootItem)),
+            .displayName = listItemText,
+            .titleIdStr = titleIdBuffer,
         };
 
         cJSON_Delete(toolboxFileContent);
@@ -250,10 +255,10 @@ inline void drawMemoryWidget(auto renderer) {
         lastUpdateTick = currentTick;
     }
     
-    renderer->drawRect(239, 15, 1, 66, tsl::separatorColor);
+    renderer->drawRect(239, 15, 1, 66, renderer->aWithOpacity(tsl::separatorColor));
     
     if (!ult::hideWidgetBackdrop) {
-        renderer->drawUniformRoundedRect(247, 15, (ult::extendedWidgetBackdrop) ? tsl::cfg::FramebufferWidth - 255 : tsl::cfg::FramebufferWidth - 255 + 40, 66, tsl::widgetBackdropColor);
+        renderer->drawUniformRoundedRect(247, 15, (ult::extendedWidgetBackdrop) ? tsl::cfg::FramebufferWidth - 255 : tsl::cfg::FramebufferWidth - 255 + 40, 66, renderer->a(tsl::widgetBackdropColor));
     }
     
     const int backdropCenterX = 247 + ((tsl::cfg::FramebufferWidth - 255) >> 1);
@@ -343,6 +348,31 @@ void GuiMain::update() {
     for (const auto& module : this->m_sysmoduleListItems) {
         this->updateStatus(module);
     }
+}
+
+bool GuiMain::handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) {
+    if (keysDown & KEY_MINUS) {
+        toggleTitleIdDisplay();
+        return true;
+    }
+    return false;
+}
+
+void GuiMain::toggleTitleIdDisplay() {
+    m_showTitleIds = !m_showTitleIds;
+    
+    // Update all list items with either title ID or display name
+    for (auto& module : this->m_sysmoduleListItems) {
+        if (m_showTitleIds) {
+            module.listItem->setText(module.titleIdStr);
+        } else {
+            module.listItem->setText(module.displayName);
+        }
+    }
+    
+    // Trigger feedback
+    triggerRumbleClick.store(true, std::memory_order_release);
+    triggerSettingsSound.store(true, std::memory_order_release);
 }
 
 void GuiMain::updateStatus(const SystemModule &module) {
